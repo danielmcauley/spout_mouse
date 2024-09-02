@@ -41,5 +41,4 @@ MOUSE_GROUPS = {
     '1274': 'sgRosa26',
     '9694': 'sgRosa26',
     '1397': 'sgRosa26',
-    # Add more mappings as needed
 }

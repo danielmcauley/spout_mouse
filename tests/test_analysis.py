@@ -2,13 +2,8 @@ import unittest
 import pandas as pd
 import numpy as np
 from scipy import stats
-from analysis import (
-    calculate_total_licks_per_trial,
-    calculate_average_licks_per_spout,
-    organize_lick_data_by_spout,
-    aggregate_data_and_calculate_sem,
-    sem,
-)
+from spout_mouse import analysis
+from unittest.mock import patch
 
 
 class TestAnalysisFunctions(unittest.TestCase):
@@ -22,54 +17,61 @@ class TestAnalysisFunctions(unittest.TestCase):
             'lick_count': [10, 15, 8, 12],
             'spout_name': ['A', 'A', 'B', 'B'],
             'group': ['control', 'control', 'experimental', 'experimental'],
-            'time_ms_binned': [100, 200, 100, 200],
+            'time_ms_binned': [200, 200, 200, 200],
             'lick_count_hz': [5, 7, 4, 6]
         })
 
     def test_calculate_total_licks_per_trial(self):
         expected_output = pd.DataFrame({
-            'mouse_id': [1, 1, 2],
-            'day': [1, 2, 1],
-            'trial_num': [1, 1, 1],
-            'lick_count_total': [10, 12, 8],
-            'spout_name': ['A', 'B', 'B'],
-            'group': ['control', 'experimental', 'experimental']
-        })
-        output = calculate_total_licks_per_trial(self.lick_data_complete)
+            'mouse_id': [1, 1, 2, 2],
+            'day': [1, 1, 1, 2],
+            'trial_num': [1, 2, 1, 1],
+            'lick_count_total': [10, 15, 8, 12],
+            'spout_name': ['A', 'A', 'B', 'B'],
+            'group': ['control', 'control', 'experimental', 'experimental']
+        }).reset_index(drop=True)
+        output = analysis.calculate_total_licks_per_trial(self.lick_data_complete)
         pd.testing.assert_frame_equal(output, expected_output)
 
+
+    @patch('spout_mouse.config.MOUSE_GROUPS', {1: 'control', 2: 'experimental'})
     def test_calculate_average_licks_per_spout(self):
-        input_data = calculate_total_licks_per_trial(self.lick_data_complete)
+        input_data = analysis.calculate_total_licks_per_trial(self.lick_data_complete)
         expected_output = pd.DataFrame({
-            'mouse_id': [1, 2],
-            'day': [1, 1],
-            'spout_name': ['A', 'B'],
-            'lick_count_total': [12.5, 8],
-            'group': ['control', 'experimental']
-        })
-        output = calculate_average_licks_per_spout(input_data)
+            'mouse_id': [1, 2, 2],
+            'day': [1, 1, 2],
+            'spout_name': ['A', 'B', 'B'],
+            'lick_count_total': [12.5, 8.0, 12.0],
+            'group': ['control', 'experimental', 'experimental']
+        }).reset_index(drop=True)
+        output = analysis.calculate_average_licks_per_spout(input_data)
+        print(input_data)
+        print(output)
+        print(expected_output)
         pd.testing.assert_frame_equal(output, expected_output)
+
 
     def test_organize_lick_data_by_spout(self):
         expected_output = pd.DataFrame({
-            'mouse_id': [1, 1, 2, 2],
-            'group': ['control', 'control', 'experimental', 'experimental'],
-            'day': [1, 1, 1, 2],
-            'spout_name': ['A', 'A', 'B', 'B'],
-            'time_ms_binned': [100, 200, 100, 200],
-            'lick_count_avg': [5, 7, 4, 6]
-        })
-        output = organize_lick_data_by_spout(self.lick_data_complete)
+            'mouse_id': [1, 2, 2],
+            'group': ['control', 'experimental', 'experimental'],
+            'day': [1, 1, 2],
+            'spout_name': ['A', 'B', 'B'],
+            'time_ms_binned': [200, 200, 200],
+            'lick_count_avg': [6.0, 4.0, 6.0]
+        }).reset_index(drop=True)
+        output = analysis.organize_lick_data_by_spout(self.lick_data_complete)
         pd.testing.assert_frame_equal(output, expected_output)
 
+
     def test_aggregate_data_and_calculate_sem(self):
-        input_data = organize_lick_data_by_spout(self.lick_data_complete)
+        input_data = analysis.organize_lick_data_by_spout(self.lick_data_complete)
         expected_output = pd.DataFrame({
-            'group': ['control', 'experimental', 'control', 'experimental'],
-            'spout_name': ['A', 'A', 'B', 'B'],
-            'time_ms_binned': [100, 100, 200, 200],
-            'lick_avg_all': [6, 5, 7, 6],
-            'sem': [np.sqrt(2.5), np.sqrt(1), np.sqrt(1), np.sqrt(2)]
-        })
-        output = aggregate_data_and_calculate_sem(input_data, sem)
+            'group': ['control', 'experimental'],
+            'spout_name': ['A', 'B'],
+            'time_ms_binned': [200, 200],
+            'lick_avg_all': [6.0, 5.0],
+            'sem': [np.nan,  np.std([6, 4], ddof=0)/np.sqrt(2)]
+        }).sort_values(by=['group', 'spout_name', 'time_ms_binned']).reset_index(drop=True)
+        output = analysis.aggregate_data_and_calculate_sem(input_data)
         pd.testing.assert_frame_equal(output, expected_output)

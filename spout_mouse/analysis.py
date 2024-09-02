@@ -1,9 +1,8 @@
 import pandas as pd
 import numpy as np
 from scipy import stats
-from .config import MOUSE_GROUPS
+from spout_mouse import config
 import itertools
-
 
 
 def calculate_total_licks_per_trial(lick_data_complete: pd.DataFrame) -> pd.DataFrame:
@@ -42,7 +41,8 @@ def calculate_average_licks_per_spout(lick_data_each_trial_total_licks: pd.DataF
         .agg({"lick_count_total": "mean"})
         .reset_index()
     )
-    lick_data_licks_per_spout["group"] = lick_data_licks_per_spout["mouse_id"].map(MOUSE_GROUPS)
+    print(config.MOUSE_GROUPS)
+    lick_data_licks_per_spout["group"] = lick_data_licks_per_spout["mouse_id"].map(config.MOUSE_GROUPS)
 
     return lick_data_licks_per_spout
 
