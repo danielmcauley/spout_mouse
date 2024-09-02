@@ -123,7 +123,7 @@ def process_lick_data(data_directory: str) -> pd.DataFrame:
         lick_data['trial_num'] = lick_data.groupby(['mouse_id'])['trial_num'].cumsum()
 
         lick_data = lick_data.loc[lick_data["time_ms"] < 5050]
-        lick_data_list.append(lick_data[spout_mouse.config.LICK_DATA_COLS  + ["event_tag"]])
+        lick_data_list.append(lick_data[LICK_DATA_COLS  + ["event_tag"]])
 
 
     lick_data_all = pd.concat(lick_data_list, ignore_index=True)
