@@ -13,6 +13,7 @@ from .config import (
     LICK_DATA_COLS,
     BIN_SIZE_MS,
     MOUSE_GROUPS,
+    NUM_TRIALS,
 )
 
 
