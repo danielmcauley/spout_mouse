@@ -81,14 +81,14 @@ def test_compute_lick_rate():
     })
     result = data_processing.compute_lick_rate(sample_data)
     expected = pd.DataFrame({
-        'mouse_id': ['mouse1'] * 3,
-        'cohort': [1] * 3,
-        'day': [1] * 3,
-        'spout_id': [1] * 3,
-        'trial_num': [1] * 3,
-        'time_ms_binned': [200, 300, 400],
-        'lick_count': [1] * 3,
-        'lick_count_hz': [5.0] * 3
+        'mouse_id': ['mouse1'] * 2,
+        'cohort': [1] * 2,
+        'day': [1] * 2,
+        'spout_id': [1] * 2,
+        'trial_num': [1] * 2,
+        'time_ms_binned': [200, 400],
+        'lick_count': [1, 2],
+        'lick_count_hz': [5.0, 10.0]
     })
     pd.testing.assert_frame_equal(result, expected)
 
