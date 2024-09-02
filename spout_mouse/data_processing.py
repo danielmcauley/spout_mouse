@@ -71,7 +71,7 @@ def load_experiment_metadata(
     return spout_names
 
 
-def process_lick_data(data_directory: str) -> pd.DataFrame:
+def process_lick_data(data_directory: str, mouse_ids_to_remove: List[str] = None) -> pd.DataFrame:
     """
     Process lick data from CSV files into a structured DataFrame.
 
@@ -127,7 +127,12 @@ def process_lick_data(data_directory: str) -> pd.DataFrame:
 
         lick_data_list.append(lick_data[LICK_DATA_COLS])
 
-    return pd.concat(lick_data_list, ignore_index=True)
+    lick_data_all = pd.concat(lick_data_list, ignore_index=True)
+
+    if mouse_ids_to_remove:
+        lick_data_all = lick_data_all[lick_data_all['mouse_id'].isin(mouse_ids_to_remove)]
+
+    return lick_data_all
 
 
 def compute_spout_order(lick_data: pd.DataFrame) -> pd.DataFrame:
