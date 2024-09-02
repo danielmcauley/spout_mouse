@@ -1,7 +1,6 @@
 import json
 import gspread
 from google.oauth2 import service_account
-from .config import GOOGLE_SHEET_URL
 import pandas as pd
 
 
@@ -34,12 +33,13 @@ def authorize_google_sheets(credentials_json: str) -> gspread.Client:
         raise ConnectionError("Failed to authorize Google Sheets client.") from e
 
 
-def get_experiment_data(client: gspread.Client, worksheet_index: int = 0) -> pd.DataFrame:
+def get_experiment_data(client: gspread.Client, google_sheet_url: str, worksheet_index: int = 0) -> pd.DataFrame:
     """
     Fetch experiment data from a Google Sheets document.
 
     Args:
         client (gspread.Client): Authorized Google Sheets client.
+        google_sheet_url (str, optional): URL of the Google Sheets document.
         worksheet_index (int, optional): Index of the worksheet to retrieve. Defaults to 0.
 
     Returns:
@@ -49,10 +49,12 @@ def get_experiment_data(client: gspread.Client, worksheet_index: int = 0) -> pd.
         ValueError: If fetching data fails.
     """
     try:
-        sheet = client.open_by_url(GOOGLE_SHEET_URL)
+        sheet_url = google_sheet_url
+        sheet = client.open_by_url(sheet_url)
         worksheet = sheet.get_worksheet(worksheet_index)
         records = worksheet.get_all_records()
         data = pd.DataFrame(records)
         return data
     except Exception as e:
         raise ValueError("Failed to fetch data from Google Sheets.") from e
+

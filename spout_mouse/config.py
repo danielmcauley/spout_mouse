@@ -35,9 +35,6 @@ BASELINE_END = 1
 SEC_TO_DROP_START = 8
 SEC_TO_DROP_END = 5
 
-# Google Sheets Parameters
-GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/your_sheet_id/edit#gid=0'
-
 # Mouse Groups Mapping
 MOUSE_GROUPS = {
     '1228': 'sgRosa26',
