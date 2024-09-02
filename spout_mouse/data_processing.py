@@ -123,12 +123,26 @@ def process_lick_data(data_directory: str) -> pd.DataFrame:
         lick_data['trial_num'] = lick_data.groupby(['mouse_id'])['trial_num'].cumsum()
 
         lick_data = lick_data.loc[lick_data["time_ms"] < 5050]
-        lick_data_list.append(lick_data[LICK_DATA_COLS  + ["event_tag"]])
+        lick_data = lick_data[lick_data["event_tag"].isin(LICK_CODES)]
+
+        lick_data_list.append(lick_data[LICK_DATA_COLS])
+
+    return pd.concat(lick_data_list, ignore_index=True)
 
 
-    lick_data_all = pd.concat(lick_data_list, ignore_index=True)
-    return lick_data_all
+def compute_spout_order(lick_data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Computes the 'spout_order' DataFrame by grouping 'lick_data' by 'cohort', 'day', and 'trial_num',
+    and taking the first 'spout_id' encountered in each group.
 
+    Args:
+        lick_data (pd.DataFrame): DataFrame containing columns 'cohort', 'day', 'trial_num', and 'spout_id'.
+
+    Returns:
+        pd.DataFrame: DataFrame with columns 'cohort', 'day', 'trial_num', and 'spout_id', where 'spout_id'
+            is the first encountered value for each group defined by 'cohort', 'day', and 'trial_num'.
+    """
+    return lick_data.groupby(['cohort', 'day', 'trial_num'])['spout_id'].first().reset_index()
 
 
 def compute_lick_rate(lick_data: pd.DataFrame) -> pd.DataFrame:
@@ -150,6 +164,56 @@ def compute_lick_rate(lick_data: pd.DataFrame) -> pd.DataFrame:
     )
     lick_rate['lick_count_hz'] = lick_rate['lick_count'] * (1000 / BIN_SIZE_MS)
     return lick_rate
+
+
+def create_and_merge_spine(lick_data_avg: pd.DataFrame) -> pd.DataFrame:
+    """
+    Creates a 'spine' DataFrame with all combinations of mouse IDs, days, time bins,
+    and trial numbers, then merges it with the provided lick data.
+
+    Args:
+        lick_data_avg (pd.DataFrame): DataFrame containing averaged lick data with columns
+            'mouse_id', 'day', 'time_ms_binned', 'lick_count', 'lick_count_hz', and 'cohort'.
+
+    Returns:
+        pd.DataFrame: Merged DataFrame containing all combinations of mouse IDs, days, time bins,
+            trial numbers, and merged lick data. Missing values in lick data are filled with 0.
+    """
+    all_mouse_ids = lick_data_avg["mouse_id"].unique()
+    all_days = lick_data_avg["day"].unique()
+    all_time_ms_binneds = lick_data_avg["time_ms_binned"].unique()
+    all_trial_nums = list(range(1, NUM_TRIALS + 1))  # Assuming NUM_TRIALS is defined somewhere
+
+    # Create a DataFrame 'spine' with all combinations of mouse IDs, days, time bins, and trial numbers
+    spine = pd.DataFrame(
+        itertools.product(all_mouse_ids, all_days, all_time_ms_binneds, all_trial_nums),
+        columns=["mouse_id", "day", "time_ms_binned", "trial_num"]
+    ).sort_values(["mouse_id", "day", "time_ms_binned", "trial_num"])
+
+    # Merge spine with lick_data_avg, filling missing values with 0 and propagating 'cohort'
+    lick_data_with_spine = spine.merge(lick_data_avg, how="left").fillna({"lick_count": 0, "lick_count_hz": 0})
+    lick_data_with_spine["cohort"] = lick_data_with_spine.sort_values("cohort").groupby("mouse_id")["cohort"].ffill()
+
+    return lick_data_with_spine
+
+
+def fill_missing_spout_ids(lick_data_with_spine: pd.DataFrame, spout_order: pd.DataFrame) -> pd.DataFrame:
+    """
+    Fills missing 'spout_id' values in 'lick_data_with_spine' by merging it with 'spout_order'.
+
+    Args:
+        lick_data_with_spine (pd.DataFrame): DataFrame containing merged data with columns
+            'mouse_id', 'day', 'time_ms_binned', 'trial_num', 'lick_count', 'lick_count_hz', and 'cohort'.
+        spout_order (pd.DataFrame): DataFrame containing 'cohort', 'day', 'trial_num', and 'spout_id'.
+
+    Returns:
+        pd.DataFrame: DataFrame with completed 'spout_id' values merged into 'lick_data_with_spine'.
+    """
+    lick_data_complete = lick_data_with_spine \
+        .drop(['spout_id'], axis=1) \
+        .merge(spout_order, on=['cohort', 'day', 'trial_num'], how='left')
+
+    return lick_data_complete
 
 
 def merge_spout_info(lick_rate: pd.DataFrame, spout_names: pd.DataFrame) -> pd.DataFrame:
