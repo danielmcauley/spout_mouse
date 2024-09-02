@@ -41,7 +41,6 @@ def calculate_average_licks_per_spout(lick_data_each_trial_total_licks: pd.DataF
         .agg({"lick_count_total": "mean"})
         .reset_index()
     )
-    print(config.MOUSE_GROUPS)
     lick_data_licks_per_spout["group"] = lick_data_licks_per_spout["mouse_id"].map(config.MOUSE_GROUPS)
 
     return lick_data_licks_per_spout
