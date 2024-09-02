@@ -1,0 +1,13 @@
+pandas>=1.0
+numpy>=1.18
+matplotlib>=3.2
+seaborn>=0.10
+scipy>=1.4
+statsmodels>=0.11
+plotnine>=0.8
+scikit-learn>=0.22
+tqdm>=4.42
+gspread>=3.6
+google-auth>=1.11
+pingouin>=0.3.8
+tdt>=0.6.6
