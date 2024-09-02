@@ -11,6 +11,7 @@ def test_authorize_google_sheets_success(mocker):
     # Create mock credentials object
     mock_credentials = Mock()
     mock_scoped_credentials = Mock()
+    mock_google_sheet_url = Mock()
     
     # Mock the from_service_account_info method
     mocker.patch(
@@ -56,7 +57,7 @@ def test_get_experiment_data_success(mocker):
     mock_sheet.get_worksheet.return_value = mock_worksheet
     mock_client.open_by_url.return_value = mock_sheet
     
-    data = utils.get_experiment_data(mock_client)
+    data = utils.get_experiment_data(mock_client, mock_sheet)
     assert isinstance(data, pd.DataFrame)
     assert not data.empty
     assert list(data.columns) == ['experiment', 'cohort', 'day', 'spout_id', 'spout_name']
@@ -64,7 +65,8 @@ def test_get_experiment_data_success(mocker):
 
 def test_get_experiment_data_failure(mocker):
     mock_client = Mock()
+    mock_sheet = Mock()
     mock_client.open_by_url.side_effect = Exception("Connection error")
     
     with pytest.raises(ValueError):
-        utils.get_experiment_data(mock_client)
+        utils.get_experiment_data(mock_client, mock_sheet)
