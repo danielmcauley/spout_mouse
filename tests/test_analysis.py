@@ -39,15 +39,12 @@ class TestAnalysisFunctions(unittest.TestCase):
         input_data = analysis.calculate_total_licks_per_trial(self.lick_data_complete)
         expected_output = pd.DataFrame({
             'mouse_id': [1, 2, 2],
-            'day': [1, 1, 2],
             'spout_name': ['A', 'B', 'B'],
+            'day': [1, 1, 2],
             'lick_count_total': [12.5, 8.0, 12.0],
             'group': ['control', 'experimental', 'experimental']
         }).reset_index(drop=True)
         output = analysis.calculate_average_licks_per_spout(input_data)
-        print(input_data)
-        print(output)
-        print(expected_output)
         pd.testing.assert_frame_equal(output, expected_output)
 
 

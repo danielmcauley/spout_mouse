@@ -26,7 +26,7 @@ def calculate_total_licks_per_trial(lick_data_complete: pd.DataFrame) -> pd.Data
     return lick_data_each_trial_total_licks
 
 
-def calculate_average_licks_per_spout(lick_data_each_trial_total_licks: pd.DataFrame) -> pd.DataFrame:
+def calculate_average_licks_per_spout(lick_data_each_trial_total_licks: pd.DataFrame, combine_days: bool = True) -> pd.DataFrame:
     """
     Calculates the average number of licks per spout across trials and mice.
 
@@ -36,8 +36,12 @@ def calculate_average_licks_per_spout(lick_data_each_trial_total_licks: pd.DataF
     Returns:
         pd.DataFrame: DataFrame with columns 'mouse_id', 'day', 'spout_name', 'lick_count_total', and 'group'.
     """
+    groups = ["mouse_id", "spout_name"]
+    if combine_days:
+        groups += ["day"]
+
     lick_data_licks_per_spout = (
-        lick_data_each_trial_total_licks.groupby(["mouse_id", "day", "spout_name"])
+        lick_data_each_trial_total_licks.groupby(groups)
         .agg({"lick_count_total": "mean"})
         .reset_index()
     )
