@@ -37,7 +37,7 @@ def calculate_average_licks_per_spout(lick_data_each_trial_total_licks: pd.DataF
         pd.DataFrame: DataFrame with columns 'mouse_id', 'day', 'spout_name', 'lick_count_total', and 'group'.
     """
     groups = ["mouse_id", "spout_name"]
-    if combine_days:
+    if not combine_days:
         groups += ["day"]
 
     lick_data_licks_per_spout = (
@@ -69,7 +69,7 @@ def organize_lick_data_by_spout(lick_data_complete: pd.DataFrame) -> pd.DataFram
     return lick_data_spout.reset_index()
 
 
-def aggregate_data_and_calculate_sem(lick_data_spout: pd.DataFrame) -> pd.DataFrame:
+def aggregate_data_and_calculate_sem(lick_data_spout: pd.DataFrame, combine_days: bool = True) -> pd.DataFrame:
     """
     Aggregates lick data by grouping it by 'group', 'spout_name', and 'time_ms_binned',
     and calculates the mean lick count per second ('lick_count_avg') and SEM.
@@ -82,11 +82,14 @@ def aggregate_data_and_calculate_sem(lick_data_spout: pd.DataFrame) -> pd.DataFr
         pd.DataFrame: DataFrame with aggregated data, including columns 'group', 'spout_name', 'time_ms_binned',
             'lick_avg_all', and 'sem'.
     """
+    groups = ["group", "spout_name", "time_ms_binned"]
+    if not combine_days:
+        groups += ["day"]
 
     def sem_func(arr):
         return stats.sem(arr, axis=None, ddof=0)
 
-    lick_data_grouped = lick_data_spout.groupby(["group", "spout_name", "time_ms_binned"]).agg(
+    lick_data_grouped = lick_data_spout.groupby(groups).agg(
         lick_avg_all=("lick_count_avg", "mean"),
         sem=("lick_count_avg", sem_func)
     ).reset_index()

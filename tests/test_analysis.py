@@ -44,7 +44,7 @@ class TestAnalysisFunctions(unittest.TestCase):
             'lick_count_total': [12.5, 8.0, 12.0],
             'group': ['control', 'experimental', 'experimental']
         }).reset_index(drop=True)
-        output = analysis.calculate_average_licks_per_spout(input_data)
+        output = analysis.calculate_average_licks_per_spout(input_data, False)
         pd.testing.assert_frame_equal(output, expected_output)
 
 
