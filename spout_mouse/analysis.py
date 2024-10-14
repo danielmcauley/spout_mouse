@@ -175,3 +175,163 @@ def add_auc(data: pd.DataFrame, sample_rate: float, downsample_rate: int) -> pd.
     data["auc"] = data["zscore_data_array"].apply(get_subset_auc)
     return data
 
+
+def prepare_fp_dataframe(fp_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Prepare the fiber photometry DataFrame by converting mouse IDs to strings,
+    mapping groups, and excluding specified mice.
+
+    Parameters:
+        fp_df (pd.DataFrame): The fiber photometry DataFrame.
+
+    Returns:
+        pd.DataFrame: The prepared DataFrame.
+    """
+    # Convert mouse_id from int to str
+    fp_df["mouse_id"] = fp_df["mouse_id"].astype(str)
+
+    # Map mouse_id to group
+    fp_df["group"] = fp_df["mouse_id"].map(MOUSE_GROUPS)
+
+    # Exclude certain mice
+    excluded_mice = ["0037", "9694", "1228", "0036", "0039", "9692", "0061"]
+    fp_df = fp_df[~fp_df["mouse_id"].isin(excluded_mice)]
+
+    return fp_df
+
+def clean_fp_trials(fp_df: pd.DataFrame, num_trials: int = 60) -> pd.DataFrame:
+    """
+    Ensure each mouse has a consistent number of trials and adjust trial numbers.
+
+    Parameters:
+        fp_df (pd.DataFrame): The fiber photometry DataFrame.
+        num_trials (int): The number of trials to keep per mouse per day.
+
+    Returns:
+        pd.DataFrame: The cleaned DataFrame.
+    """
+    fp_df_clean = (
+        fp_df.sort_values(['cohort', 'day', 'mouse_id', 'trial_num'])
+        .groupby(['cohort', 'day', 'mouse_id'])
+        .tail(num_trials)
+        .reset_index(drop=True)
+    )
+    fp_df_clean['trial_num'] = fp_df_clean.groupby(['cohort', 'day', 'mouse_id']).cumcount() + 1
+    return fp_df_clean
+
+def truncate_zscore_arrays(fp_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Truncate the zscore_data_array in fp_df to the minimum length among all arrays.
+
+    Parameters:
+        fp_df (pd.DataFrame): The fiber photometry DataFrame.
+
+    Returns:
+        pd.DataFrame: The DataFrame with truncated zscore_data_array.
+    """
+    min_length = fp_df["zscore_data_array"].apply(len).min()
+    fp_df["zscore_data_array"] = fp_df["zscore_data_array"].apply(lambda x: x[:min_length])
+    return fp_df
+
+def merge_fp_with_lick_data(fp_df: pd.DataFrame, lick_data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Merge fiber photometry data with lick data to add spout information.
+
+    Parameters:
+        fp_df (pd.DataFrame): The fiber photometry DataFrame.
+        lick_data (pd.DataFrame): The lick data DataFrame.
+
+    Returns:
+        pd.DataFrame: The merged DataFrame.
+    """
+    unique_combinations = lick_data[["day", "cohort", "trial_num", "spout_name"]].drop_duplicates()
+    fp_df_complete = pd.merge(fp_df, unique_combinations, on=['cohort', 'day', 'trial_num'], how='left')
+    return fp_df_complete
+
+def calculate_mean_zscore(fp_df: pd.DataFrame, across_days: bool = False) -> pd.DataFrame:
+    """
+    Calculate the mean zscore_data_array for each mouse, day, and spout_name.
+
+    Parameters:
+        fp_df (pd.DataFrame): The fiber photometry DataFrame.
+        across_days (bool): Whether to calculate across days or per day.
+
+    Returns:
+        pd.DataFrame: DataFrame with mean zscore_data_array per mouse and spout_name.
+    """
+    if across_days:
+        group_columns = ["mouse_id", "spout_name"]
+    else:
+        group_columns = ["mouse_id", "day", "spout_name"]
+    mean_zscore_by_mouse_spout = (
+        fp_df.groupby(group_columns)["zscore_data_array"]
+        .apply(lambda x: np.mean(np.stack(x), axis=0))
+        .reset_index()
+    )
+
+    # Map group information
+    group_mapping = fp_df[["mouse_id", "group"]].drop_duplicates().set_index("mouse_id")["group"].to_dict()
+    mean_zscore_by_mouse_spout["group"] = mean_zscore_by_mouse_spout["mouse_id"].map(group_mapping)
+
+    return mean_zscore_by_mouse_spout
+
+def prepare_long_format(mean_zscore_df: pd.DataFrame, across_days: bool = False) -> pd.DataFrame:
+    """
+    Transform the mean zscore DataFrame into long format for plotting.
+
+    Parameters:
+        mean_zscore_df (pd.DataFrame): DataFrame with mean zscore_data_array.
+        across_days (bool): Whether data is calculated across days or per day.
+
+    Returns:
+        pd.DataFrame: Long format DataFrame for plotting.
+    """
+    # Explode zscore_data_array
+    mean_zscore_long = mean_zscore_df.explode("zscore_data_array")
+
+    # Add time index
+    if across_days:
+        groupby_columns = ["group", "mouse_id", "spout_name"]
+    else:
+        groupby_columns = ["group", "mouse_id", "day", "spout_name"]
+
+    mean_zscore_long["time"] = mean_zscore_long.groupby(groupby_columns).cumcount()
+    mean_zscore_long["zscore_data_array"] = mean_zscore_long["zscore_data_array"].astype(float)
+    mean_zscore_long.rename(columns={'group':'group_name'}, inplace=True)
+
+    # Convert day to string if needed
+    if "day" in mean_zscore_long.columns:
+        mean_zscore_long["day"] = mean_zscore_long["day"].astype(str)
+
+    return mean_zscore_long
+
+def calculate_mean_sem_zscores(mean_zscore_df: pd.DataFrame, across_days: bool = False) -> pd.DataFrame:
+    """
+    Calculate the mean and SEM of zscore_data_array for each group, day, and spout_name.
+
+    Parameters:
+        mean_zscore_df (pd.DataFrame): DataFrame with mean zscore_data_array.
+        across_days (bool): Whether data is calculated across days or per day.
+
+    Returns:
+        pd.DataFrame: DataFrame with mean and SEM of zscore_data_array.
+    """
+    if across_days:
+        group_columns = ["group", "spout_name"]
+    else:
+        group_columns = ["group", "day", "spout_name"]
+
+    mean_sem_zscores = mean_zscore_df.groupby(group_columns)["zscore_data_array"].apply(
+        lambda x: pd.DataFrame({
+            'mean_zscore': np.mean(np.stack(x.values), axis=0),
+            'sem_zscore': stats.sem(np.stack(x.values), axis=0, nan_policy='omit')
+        })
+    ).reset_index()
+
+    # Explode the DataFrame to have one row per time point
+    mean_sem_zscores = mean_sem_zscores.explode(['mean_zscore', 'sem_zscore']).reset_index(drop=True)
+
+    # Add time index
+    mean_sem_zscores['time'] = mean_sem_zscores.groupby(group_columns).cumcount()
+
+    return mean_sem_zscores
