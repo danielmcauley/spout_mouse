@@ -37,8 +37,39 @@ SEC_TO_DROP_END = 5
 
 # Mouse Groups Mapping
 MOUSE_GROUPS = {
-    '1228': 'sgRosa26',
+    '1228': 'sgRosa26', 
     '1274': 'sgRosa26',
     '9694': 'sgRosa26',
     '1397': 'sgRosa26',
+    '0040': 'sgRosa26',
+    '0036': 'sgRosa26',
+    '0037': 'sgRosa26',
+    '9695': 'sgRosa26',
+    '0240': 'sgTrpc6', # check number when doing operant
+    '2022': 'sgRosa26',
+    '0246': 'sgRosa26',
+    '0247': 'sgRosa26',
+    '0507': 'sgRosa26',
+    '0740': 'sgRosa26',
+    '0638': 'sgRosa26',
+    '0640': 'sgRosa26',
+    '0644': 'sgRosa26',
+    '0641': 'sgRosa26',
+    '1270': 'sgTrpc6',
+    '1273': 'sgTrpc6',
+    '9692': 'sgTrpc6',
+    '0061': 'sgTrpc6',
+    '0041': 'sgTrpc6',
+    '0038': 'sgTrpc6',
+    '0039': 'sgTrpc6',
+    '0238': 'sgRosa26', # check number when doing operant
+    '0239': 'sgTrpc6',
+    '0245': 'sgTrpc6',
+    '0248': 'sgTrpc6',
+    '0509': 'sgTrpc6',
+    '0637': 'sgTrpc6',
+    '0639': 'sgTrpc6',
+    '0645': 'sgTrpc6',
+    '0066': 'sgTrpc6',
+    '0067': 'sgTrpc6'
 }
