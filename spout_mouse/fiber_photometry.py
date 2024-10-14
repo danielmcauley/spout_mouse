@@ -52,7 +52,7 @@ def is_second_mouse(block_path: str) -> bool:
         bool: True if second mouse, False otherwise.
     """
     parts = os.path.basename(block_path).split("-")
-    return parts[0] == '0000'
+    return parts[2] == '0000'
 
 
 def process_mouse(
