@@ -199,7 +199,7 @@ def prepare_fp_dataframe(fp_df: pd.DataFrame, excluded_mice: list[str] = None) -
 
     return fp_df
 
-def clean_fp_trials(fp_df: pd.DataFrame, num_trials: int = 60) -> pd.DataFrame:
+def clean_fp_trials(fp_df: pd.DataFrame, num_trials: int) -> pd.DataFrame:
     """
     Ensure each mouse has a consistent number of trials and adjust trial numbers.
 
