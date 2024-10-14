@@ -41,7 +41,7 @@ from .fiber_photometry import (
 )
 from .plotting import plot_lick_rate, plot_total_licks
 
-__all__.extend([
+__all__ = [
     'downsample_stream',
     'double_exponential',
     'get_bounds',
@@ -86,4 +86,4 @@ __all__.extend([
     'SEC_TO_DROP_END',
     'GOOGLE_SHEET_URL',
     'MOUSE_GROUPS',
-])
+]

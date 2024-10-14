@@ -1,7 +1,7 @@
-Filename: ./fiber_photometry.py
 import os
 import glob
 import pandas as pd
+import numpy as np
 from tqdm import tqdm
 from tdt import read_block
 from .config import (

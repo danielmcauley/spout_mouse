@@ -2,6 +2,7 @@ import unittest
 import pandas as pd
 import numpy as np
 from spout_mouse import analysis
+from spout_mouse.config import DOWNSAMPLE_RATE  # Add this import
 from unittest.mock import patch
 
 
@@ -10,47 +11,53 @@ class TestAnalysisFunctions(unittest.TestCase):
     def setUp(self):
         # Create sample data for tests
         self.lick_data_complete = pd.DataFrame({
-            'mouse_id': [1, 1, 2, 2],
+            'mouse_id': ['1228', '1228', '1274', '1274'],  # Use string mouse IDs
             'day': [1, 1, 1, 2],
             'trial_num': [1, 2, 1, 1],
             'lick_count': [10, 15, 8, 12],
             'spout_name': ['A', 'A', 'B', 'B'],
-            'group': ['control', 'control', 'experimental', 'experimental'],
+            'group': ['sgRosa26', 'sgRosa26', 'sgRosa26', 'sgRosa26'],
             'time_ms_binned': [200, 200, 200, 200],
             'lick_count_hz': [5, 7, 4, 6]
         })
 
     def test_calculate_total_licks_per_trial(self):
         expected_output = pd.DataFrame({
-            'mouse_id': [1, 1, 2, 2],
+            'mouse_id': ['1228', '1228', '1274', '1274'],
             'day': [1, 1, 1, 2],
             'trial_num': [1, 2, 1, 1],
             'lick_count_total': [10, 15, 8, 12],
             'spout_name': ['A', 'A', 'B', 'B'],
-            'group': ['control', 'control', 'experimental', 'experimental']
+            'group': ['sgRosa26', 'sgRosa26', 'sgRosa26', 'sgRosa26']
         }).reset_index(drop=True)
         output = analysis.calculate_total_licks_per_trial(self.lick_data_complete)
         pd.testing.assert_frame_equal(output, expected_output)
 
-
-    @patch('spout_mouse.config.MOUSE_GROUPS', {1: 'control', 2: 'experimental'})
+    @patch('spout_mouse.config.MOUSE_GROUPS', {
+        '1228': 'sgRosa26',
+        '1274': 'sgRosa26'
+    })
     def test_calculate_average_licks_per_spout(self):
         input_data = analysis.calculate_total_licks_per_trial(self.lick_data_complete)
+
+        # Ensure mouse_id is of type string
+        input_data['mouse_id'] = input_data['mouse_id'].astype(str)
+
         expected_output = pd.DataFrame({
-            'mouse_id': [1, 2, 2],
+            'mouse_id': ['1228', '1274', '1274'],
             'spout_name': ['A', 'B', 'B'],
             'day': [1, 1, 2],
             'lick_count_total': [12.5, 8.0, 12.0],
-            'group': ['control', 'experimental', 'experimental']
+            'group': ['sgRosa26', 'sgRosa26', 'sgRosa26']
         }).reset_index(drop=True)
-        output = analysis.calculate_average_licks_per_spout(input_data, False)
-        pd.testing.assert_frame_equal(output, expected_output)
 
+        output = analysis.calculate_average_licks_per_spout(input_data, combine_days=False)
+        pd.testing.assert_frame_equal(output, expected_output)
 
     def test_organize_lick_data_by_spout(self):
         expected_output = pd.DataFrame({
-            'mouse_id': [1, 2, 2],
-            'group': ['control', 'experimental', 'experimental'],
+            'mouse_id': ['1228', '1274', '1274'],
+            'group': ['sgRosa26', 'sgRosa26', 'sgRosa26'],
             'day': [1, 1, 2],
             'spout_name': ['A', 'B', 'B'],
             'time_ms_binned': [200, 200, 200],
@@ -59,11 +66,10 @@ class TestAnalysisFunctions(unittest.TestCase):
         output = analysis.organize_lick_data_by_spout(self.lick_data_complete)
         pd.testing.assert_frame_equal(output, expected_output)
 
-
     def test_aggregate_data_and_calculate_sem(self):
         input_data = analysis.organize_lick_data_by_spout(self.lick_data_complete)
         expected_output = pd.DataFrame({
-            'group': ['control', 'experimental'],
+            'group': ['sgRosa26', 'sgRosa26'],
             'spout_name': ['A', 'B'],
             'time_ms_binned': [200, 200],
             'lick_avg_all': [6.0, 5.0],
@@ -72,12 +78,11 @@ class TestAnalysisFunctions(unittest.TestCase):
         output = analysis.aggregate_data_and_calculate_sem(input_data)
         pd.testing.assert_frame_equal(output, expected_output)
 
-
     def test_calculate_zscores(self):
         spout_data = pd.DataFrame({
             'spout_extension_timestamp_sec': [10, 20],
             'trial_num': [1, 2],
-            'mouse_id': ['mouse1', 'mouse1'],
+            'mouse_id': ['1228', '1228'],
             'cohort': [1, 1],
             'day': [1, 1]
         })
@@ -89,7 +94,6 @@ class TestAnalysisFunctions(unittest.TestCase):
         self.assertIn('zscore_data_array', result_df.columns)
         self.assertEqual(len(result_df), 2)
         self.assertIsInstance(result_df['zscore_data_array'].iloc[0], np.ndarray)
-
 
     def test_add_auc(self):
         data = pd.DataFrame({
