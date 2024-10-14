@@ -127,14 +127,14 @@ class TestAnalysisFunctions(unittest.TestCase):
 
     @patch('spout_mouse.config.MOUSE_GROUPS', {'1274': 'sgRosa26'})
     def test_prepare_fp_dataframe(self):
-        prepared_df = analysis.prepare_fp_dataframe(self.fp_df)
+        excluded_mice = ["0037", "9694", "1228", "0036", "0039", "9692", "0061"]
+        prepared_df = analysis.prepare_fp_dataframe(self.fp_df, excluded_mice)
         # Check that mouse_id is string
         self.assertTrue(prepared_df['mouse_id'].dtype == object)
         # Check that 'group' is mapped correctly
         expected_groups = prepared_df['mouse_id'].map(MOUSE_GROUPS)
         pd.testing.assert_series_equal(prepared_df['group'], expected_groups, check_names=False)
         # Check that excluded mice are removed
-        excluded_mice = ["0037", "9694", "1228", "0036", "0039", "9692", "0061"]
         self.assertFalse(prepared_df['mouse_id'].isin(excluded_mice).any())
 
     def test_clean_fp_trials(self):
