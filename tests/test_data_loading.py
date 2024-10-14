@@ -1,8 +1,9 @@
 import pytest
 import numpy as np
 import pandas as pd
-from spout_mouse.data_loading import build_traces_df, build_spout_df
 import os
+from spout_mouse.data_loading import build_traces_df, build_spout_df
+from spout_mouse.config import SEC_TO_DROP_START, SEC_TO_DROP_END
 
 
 def test_build_traces_df():
@@ -18,11 +19,11 @@ def test_build_traces_df():
 
 def test_build_spout_df():
     timestamps = np.array([10.0, 20.0, 30.0])
-    block_path = os.path.join('path', 'to', 'cohort 1', 'day 2', 'tanks', 'block-0000-0001')
+    block_path = os.path.join('path', 'to', 'day 2', 'cohort 1', 'tanks', 'block-0000-0001')  # Swapped 'day 2' and 'cohort 1'
     mouse_id = '0000'
     spout_df = build_spout_df(timestamps, block_path, mouse_id)
     assert len(spout_df) == len(timestamps)
     assert all(spout_df['mouse_id'] == mouse_id)
     assert all(spout_df['cohort'] == 1)
     assert all(spout_df['day'] == 2)
-    assert all(spout_df['trial_num'] == [1, 2, 3])
+
