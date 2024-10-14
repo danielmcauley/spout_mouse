@@ -173,7 +173,7 @@ def compute_lick_rate(lick_data: pd.DataFrame) -> pd.DataFrame:
     return lick_rate
 
 
-def create_and_merge_spine(lick_data_avg: pd.DataFrame) -> pd.DataFrame:
+def create_and_merge_spine(lick_data_avg: pd.DataFrame, num_trials: int) -> pd.DataFrame:
     """
     Creates a 'spine' DataFrame with all combinations of mouse IDs, days, time bins,
     and trial numbers, then merges it with the provided lick data.
@@ -189,7 +189,7 @@ def create_and_merge_spine(lick_data_avg: pd.DataFrame) -> pd.DataFrame:
     all_mouse_ids = lick_data_avg["mouse_id"].unique()
     all_days = lick_data_avg["day"].unique()
     all_time_ms_binneds = lick_data_avg["time_ms_binned"].unique()
-    all_trial_nums = list(range(1, NUM_TRIALS + 1))  # Assuming NUM_TRIALS is defined somewhere
+    all_trial_nums = list(range(1, num_trials + 1))
 
     # Create a DataFrame 'spine' with all combinations of mouse IDs, days, time bins, and trial numbers
     spine = pd.DataFrame(

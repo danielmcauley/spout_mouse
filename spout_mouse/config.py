@@ -8,7 +8,6 @@ SPOUT_EXT_CODE = 13
 SPOUT_POS_CODE = 127
 VALID_SPOUT_POS = [0, 1, 2, 3, 4]
 LICK_DATA_COLS = ['mouse_id', 'cohort', 'day', 'spout_id', 'trial_num', 'time_ms']
-NUM_TRIALS = 60
 BIN_SIZE_MS = 200  # bin size for histogram of lick rate data
 
 # Colors for Plotting
