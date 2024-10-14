@@ -1,7 +1,6 @@
 import unittest
 import pandas as pd
 import numpy as np
-from scipy import stats
 from spout_mouse import analysis
 from unittest.mock import patch
 
@@ -72,3 +71,32 @@ class TestAnalysisFunctions(unittest.TestCase):
         }).sort_values(by=['group', 'spout_name', 'time_ms_binned']).reset_index(drop=True)
         output = analysis.aggregate_data_and_calculate_sem(input_data)
         pd.testing.assert_frame_equal(output, expected_output)
+
+
+    def test_calculate_zscores(self):
+        spout_data = pd.DataFrame({
+            'spout_extension_timestamp_sec': [10, 20],
+            'trial_num': [1, 2],
+            'mouse_id': ['mouse1', 'mouse1'],
+            'cohort': [1, 1],
+            'day': [1, 1]
+        })
+        gcamp_data = pd.DataFrame({
+            'timestamp_sec': np.linspace(0, 30, 300),
+            'detrended_gcamp': np.random.rand(300)
+        })
+        result_df = analysis.calculate_zscores(spout_data, gcamp_data)
+        self.assertIn('zscore_data_array', result_df.columns)
+        self.assertEqual(len(result_df), 2)
+        self.assertIsInstance(result_df['zscore_data_array'].iloc[0], np.ndarray)
+
+
+    def test_add_auc(self):
+        data = pd.DataFrame({
+            'zscore_data_array': [np.random.rand(100), np.random.rand(100)]
+        })
+        sample_rate = 1000.0
+        result_df = analysis.add_auc(data, sample_rate, DOWNSAMPLE_RATE)
+        self.assertIn('auc', result_df.columns)
+        self.assertEqual(len(result_df), 2)
+        self.assertIsInstance(result_df['auc'].iloc[0], float)
