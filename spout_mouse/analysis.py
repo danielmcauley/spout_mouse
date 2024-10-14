@@ -176,7 +176,7 @@ def add_auc(data: pd.DataFrame, sample_rate: float, downsample_rate: int) -> pd.
     return data
 
 
-def prepare_fp_dataframe(fp_df: pd.DataFrame) -> pd.DataFrame:
+def prepare_fp_dataframe(fp_df: pd.DataFrame, excluded_mice: list[str] = None) -> pd.DataFrame:
     """
     Prepare the fiber photometry DataFrame by converting mouse IDs to strings,
     mapping groups, and excluding specified mice.
@@ -194,8 +194,8 @@ def prepare_fp_dataframe(fp_df: pd.DataFrame) -> pd.DataFrame:
     fp_df["group"] = fp_df["mouse_id"].map(MOUSE_GROUPS)
 
     # Exclude certain mice
-    excluded_mice = ["0037", "9694", "1228", "0036", "0039", "9692", "0061"]
-    fp_df = fp_df[~fp_df["mouse_id"].isin(excluded_mice)]
+    if excluded_mice:
+        fp_df = fp_df[~fp_df["mouse_id"].isin(excluded_mice)]
 
     return fp_df
 
