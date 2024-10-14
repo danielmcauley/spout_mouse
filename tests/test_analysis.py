@@ -2,7 +2,7 @@ import unittest
 import pandas as pd
 import numpy as np
 from spout_mouse import analysis
-from spout_mouse.config import DOWNSAMPLE_RATE  # Add this import
+from spout_mouse.config import DOWNSAMPLE_RATE
 from unittest.mock import patch
 
 
