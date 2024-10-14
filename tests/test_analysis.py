@@ -2,7 +2,7 @@ import unittest
 import pandas as pd
 import numpy as np
 from spout_mouse import analysis
-from spout_mouse.config import DOWNSAMPLE_RATE
+from spout_mouse.config import DOWNSAMPLE_RATE, MOUSE_GROUPS
 from unittest.mock import patch
 
 
@@ -11,7 +11,7 @@ class TestAnalysisFunctions(unittest.TestCase):
     def setUp(self):
         # Create sample data for tests
         self.lick_data_complete = pd.DataFrame({
-            'mouse_id': ['1228', '1228', '1274', '1274'],  # Use string mouse IDs
+            'mouse_id': ['1228', '1228', '1274', '1274'],
             'day': [1, 1, 1, 2],
             'trial_num': [1, 2, 1, 1],
             'lick_count': [10, 15, 8, 12],
@@ -19,6 +19,26 @@ class TestAnalysisFunctions(unittest.TestCase):
             'group': ['sgRosa26', 'sgRosa26', 'sgRosa26', 'sgRosa26'],
             'time_ms_binned': [200, 200, 200, 200],
             'lick_count_hz': [5, 7, 4, 6]
+        })
+
+        # Sample data for fp_df
+        self.fp_df = pd.DataFrame({
+            'mouse_id': ['1228', '1228', '1274', '1274', '0037', '0039'],
+            'cohort': [1, 1, 1, 1, 2, 2],
+            'day': [1, 1, 1, 1, 1, 1],
+            'trial_num': [1, 2, 1, 2, 1, 2],
+            'zscore_data_array': [np.random.rand(100) for _ in range(6)]
+        })
+        # Assign 'group' column arbitrarily
+        self.fp_df['group'] = ['sgRosa26', 'sgRosa26', 'sgRosa26', 'sgRosa26', 'control', 'control']
+
+        # Sample data for lick_data
+        self.lick_data = pd.DataFrame({
+            'mouse_id': ['1228', '1228', '1274', '1274', '0037', '0039'],
+            'cohort': [1, 1, 1, 1, 2, 2],
+            'day': [1, 1, 1, 1, 1, 1],
+            'trial_num': [1, 2, 1, 2, 1, 2],
+            'spout_name': ['water', 'sucrose', 'water', 'sucrose', 'water', 'sucrose']
         })
 
     def test_calculate_total_licks_per_trial(self):
@@ -104,3 +124,82 @@ class TestAnalysisFunctions(unittest.TestCase):
         self.assertIn('auc', result_df.columns)
         self.assertEqual(len(result_df), 2)
         self.assertIsInstance(result_df['auc'].iloc[0], float)
+
+    @patch('spout_mouse.config.MOUSE_GROUPS', {'1274': 'sgRosa26'})
+    def test_prepare_fp_dataframe(self):
+        prepared_df = analysis.prepare_fp_dataframe(self.fp_df)
+        # Check that mouse_id is string
+        self.assertTrue(prepared_df['mouse_id'].dtype == object)
+        # Check that 'group' is mapped correctly
+        expected_groups = prepared_df['mouse_id'].map(MOUSE_GROUPS)
+        pd.testing.assert_series_equal(prepared_df['group'], expected_groups, check_names=False)
+        # Check that excluded mice are removed
+        excluded_mice = ["0037", "9694", "1228", "0036", "0039", "9692", "0061"]
+        self.assertFalse(prepared_df['mouse_id'].isin(excluded_mice).any())
+
+    def test_clean_fp_trials(self):
+        # Assume we want to keep only 1 trial per mouse for simplicity
+        cleaned_df = analysis.clean_fp_trials(self.fp_df, num_trials=1)
+        # Check that each mouse has only 1 trial
+        counts = cleaned_df.groupby(['cohort', 'day', 'mouse_id']).size()
+        self.assertTrue((counts == 1).all())
+        # Check that trial numbers are reset starting from 1
+        expected_trial_nums = [1] * len(cleaned_df)
+        self.assertListEqual(cleaned_df['trial_num'].tolist(), expected_trial_nums)
+
+    def test_truncate_zscore_arrays(self):
+        # Ensure 'zscore_data_array' column is of type 'object'
+        self.fp_df['zscore_data_array'] = self.fp_df['zscore_data_array'].astype(object)
+        
+        # Assign arrays of different lengths
+        self.fp_df.at[0, 'zscore_data_array'] = np.random.rand(90)
+        self.fp_df.at[1, 'zscore_data_array'] = np.random.rand(80)
+        
+        truncated_df = analysis.truncate_zscore_arrays(self.fp_df)
+        # Check that all arrays have the same length
+        lengths = truncated_df['zscore_data_array'].apply(len)
+        self.assertTrue((lengths == lengths.iloc[0]).all())
+
+    def test_merge_fp_with_lick_data(self):
+        merged_df = analysis.merge_fp_with_lick_data(self.fp_df, self.lick_data)
+        # Check that 'spout_name' is added
+        self.assertIn('spout_name', merged_df.columns)
+        # Check that the number of rows matches
+        self.assertEqual(len(merged_df), len(self.fp_df))
+        # Check for NaN values in 'spout_name' (should be none if data aligns)
+        self.assertFalse(merged_df['spout_name'].isna().any())
+
+    def test_calculate_mean_zscore(self):
+        # Assume 'fp_df_complete' is the merged DataFrame
+        fp_df_complete = analysis.merge_fp_with_lick_data(self.fp_df, self.lick_data)
+        mean_zscore_df = analysis.calculate_mean_zscore(fp_df_complete, across_days=False)
+        # Check that the mean zscore_data_array is calculated
+        self.assertIn('zscore_data_array', mean_zscore_df.columns)
+        # Check that group mapping is correct
+        self.assertIn('group', mean_zscore_df.columns)
+        # Check that the number of unique combinations matches
+        expected_groups = fp_df_complete.groupby(['mouse_id', 'day', 'spout_name']).size().reset_index()
+        self.assertEqual(len(mean_zscore_df), len(expected_groups))
+
+    def test_prepare_long_format(self):
+        fp_df_complete = analysis.merge_fp_with_lick_data(self.fp_df, self.lick_data)
+        mean_zscore_df = analysis.calculate_mean_zscore(fp_df_complete, across_days=False)
+        mean_zscore_long = analysis.prepare_long_format(mean_zscore_df, across_days=False)
+        # Check that DataFrame is in long format
+        self.assertIn('time', mean_zscore_long.columns)
+        # Check that 'zscore_data_array' is a float
+        self.assertTrue(mean_zscore_long['zscore_data_array'].dtype == float)
+        # Check that 'group_name' column exists
+        self.assertIn('group_name', mean_zscore_long.columns)
+
+    def test_calculate_mean_sem_zscores(self):
+        fp_df_complete = analysis.merge_fp_with_lick_data(self.fp_df, self.lick_data)
+        mean_zscore_df = analysis.calculate_mean_zscore(fp_df_complete, across_days=False)
+        mean_sem_zscores = analysis.calculate_mean_sem_zscores(mean_zscore_df, across_days=False)
+        # Check that 'mean_zscore' and 'sem_zscore' columns exist
+        self.assertIn('mean_zscore', mean_sem_zscores.columns)
+        self.assertIn('sem_zscore', mean_sem_zscores.columns)
+        # Check that 'time' column exists
+        self.assertIn('time', mean_sem_zscores.columns)
+        # Check that the DataFrame is not empty
+        self.assertFalse(mean_sem_zscores.empty)
