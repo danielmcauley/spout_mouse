@@ -82,7 +82,6 @@ __all__ = [
     'SPOUT_POS_CODE',
     'VALID_SPOUT_POS',
     'LICK_DATA_COLS',
-    'BIN_SIZE_MS',
     'DAY_COLORS',
     'LIQUIDS_COLORS',
     'DOWNSAMPLE_RATE',
