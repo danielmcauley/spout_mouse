@@ -12,7 +12,6 @@ from .config import (
     SPOUT_POS_CODE,
     VALID_SPOUT_POS,
     LICK_DATA_COLS,
-    BIN_SIZE_MS,
     MOUSE_GROUPS
 )
 
@@ -151,24 +150,25 @@ def compute_spout_order(lick_data: pd.DataFrame) -> pd.DataFrame:
     return lick_data.groupby(['cohort', 'day', 'trial_num'])['spout_id'].first().reset_index()
 
 
-def compute_lick_rate(lick_data: pd.DataFrame) -> pd.DataFrame:
+def compute_lick_rate(lick_data: pd.DataFrame, bin_size: int = 200) -> pd.DataFrame:
     """
     Compute lick rate and binning.
 
     Parameters:
         lick_data (pd.DataFrame): DataFrame containing processed lick data.
+        bin_size (Int): Millisecond bins for lick data. Default is 200 ms.
 
     Returns:
         pd.DataFrame: DataFrame with computed lick rates.
     """
     lick_data = lick_data.copy()
-    lick_data['time_ms_binned'] = (np.ceil(lick_data['time_ms'] / BIN_SIZE_MS) * BIN_SIZE_MS).astype(int)
+    lick_data['time_ms_binned'] = (np.ceil(lick_data['time_ms'] / bin_size) * bin_size).astype(int)
     lick_rate = (
         lick_data.groupby(['mouse_id', 'cohort', 'day', 'spout_id', 'trial_num', 'time_ms_binned'])
         .size()
         .reset_index(name='lick_count')
     )
-    lick_rate['lick_count_hz'] = lick_rate['lick_count'] * (1000 / BIN_SIZE_MS)
+    lick_rate['lick_count_hz'] = lick_rate['lick_count'] * (1000 / bin_size)
     return lick_rate
 
 
