@@ -26,7 +26,6 @@ LIQUIDS_COLORS = {
 
 # Fiber Photometry Parameters
 DOWNSAMPLE_RATE = 100  # Average every 100 samples into 1 value
-TRIAL_START = 10
 TRIAL_END = 15
 BASELINE_START = 6  # set graph parameters relative to spout extension
 BASELINE_END = 1

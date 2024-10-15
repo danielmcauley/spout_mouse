@@ -4,7 +4,6 @@ from scipy import stats
 from sklearn.metrics import auc
 from typing import List
 from .config import (
-    TRIAL_START,
     TRIAL_END,
     BASELINE_START,
     BASELINE_END,
@@ -109,7 +108,7 @@ def aggregate_data_and_calculate_sem(lick_data_spout: pd.DataFrame, combine_days
 def calculate_zscores(
     spout_data: pd.DataFrame,
     gcamp_data: pd.DataFrame,
-    trial_start: int = TRIAL_START,
+    trial_start: int,
     trial_end: int = TRIAL_END,
     baseline_start: int = BASELINE_START,
     baseline_end: int = BASELINE_END
@@ -120,7 +119,7 @@ def calculate_zscores(
     Parameters:
         spout_data (pd.DataFrame): DataFrame containing spout extension timestamps.
         gcamp_data (pd.DataFrame): DataFrame containing detrended GCaMP data.
-        trial_start (int): Start time relative to spout extension for trial.
+        trial_start (int): Start time relative to spout extension for trial in seconds. E.g. trial_start = 10 is 10 seconds before spout extension.
         trial_end (int): End time relative to spout extension for trial.
         baseline_start (int): Start time relative to spout extension for baseline.
         baseline_end (int): End time relative to spout extension for baseline.

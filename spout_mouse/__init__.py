@@ -85,7 +85,6 @@ __all__ = [
     'DAY_COLORS',
     'LIQUIDS_COLORS',
     'DOWNSAMPLE_RATE',
-    'TRIAL_START',
     'TRIAL_END',
     'BASELINE_START',
     'BASELINE_END',
