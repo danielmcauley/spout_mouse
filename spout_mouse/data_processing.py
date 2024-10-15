@@ -13,8 +13,7 @@ from .config import (
     VALID_SPOUT_POS,
     LICK_DATA_COLS,
     BIN_SIZE_MS,
-    MOUSE_GROUPS,
-    NUM_TRIALS,
+    MOUSE_GROUPS
 )
 
 
@@ -181,6 +180,7 @@ def create_and_merge_spine(lick_data_avg: pd.DataFrame, num_trials: int) -> pd.D
     Args:
         lick_data_avg (pd.DataFrame): DataFrame containing averaged lick data with columns
             'mouse_id', 'day', 'time_ms_binned', 'lick_count', 'lick_count_hz', and 'cohort'.
+        num_trials (int): Interger, number of trials per mouse.
 
     Returns:
         pd.DataFrame: Merged DataFrame containing all combinations of mouse IDs, days, time bins,
