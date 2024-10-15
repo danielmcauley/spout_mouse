@@ -8,8 +8,7 @@ from .config import (
     TRIAL_END,
     BASELINE_START,
     BASELINE_END,
-    MOUSE_GROUPS,
-    NUM_TRIALS
+    MOUSE_GROUPS
 )
 from .signal_processing import detrend_signal
 from .data_loading import build_traces_df, build_spout_df
