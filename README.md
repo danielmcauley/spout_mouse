@@ -1,6 +1,6 @@
 # Spout Mouse
 
-A Python package for processing and analyzing fiber photometry and lick/spout data from mouse trials.
+A Python package for processing and analyzing fiber photometry and lick/spout data from mouse trials. Fiber photometry data is acquired using the Tucker-Davis Technologies (TDT) system and Arduino data is collected using [OHRBETS](https://elifesciences.org/articles/86183).
 
 ## Features
 
@@ -143,3 +143,8 @@ Daniel McAuley
 
 Email: dmcauley4@gmail.com
 GitHub: danielmcauley
+
+Mollie Bernstein (Zweifel Lab, University of Washington)
+
+Email: mollie.bernstein@gmail.com
+GitHub: molliebernstein
