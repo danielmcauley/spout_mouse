@@ -351,7 +351,7 @@ def calculate_auc_by_mouse_spout(fp_df: pd.DataFrame, across_days: bool = False)
     else:
         group_columns = ["group", "day", "mouse_id", "spout_name"]
 
-    auc_by_mouse_spout = fp_df.groupby([group_columns])["auc"].agg(["mean", "sem"]).reset_index()
+    auc_by_mouse_spout = fp_df.groupby(group_columns)["auc"].agg(["mean", "sem"]).reset_index()
     
 
     return auc_by_mouse_spout
