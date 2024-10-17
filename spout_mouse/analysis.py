@@ -334,3 +334,24 @@ def calculate_mean_sem_zscores(mean_zscore_df: pd.DataFrame, across_days: bool =
     mean_sem_zscores['time'] = mean_sem_zscores.groupby(group_columns).cumcount()
 
     return mean_sem_zscores
+
+def calculate_auc_by_mouse_spout(fp_df: pd.DataFrame, across_days: bool = False) -> pd.DataFrame:
+    """
+    Calculate the mean and SEM for AUC for each mouse, spout_name, and day
+
+    Parameters:
+        fp_df (pd.DataFrame): DataFrame with AUC for each trial.
+        across_days (bool): Whether data is calculated across days or per day.
+
+    Returns:
+        pd.DataFrame: DataFrame with AUC for each mouse, spout_name, and day.
+    """
+    if across_days:
+        group_columns = ["group", "mouse_id", "spout_name"]
+    else:
+        group_columns = ["group", "day", "mouse_id", "spout_name"]
+
+    auc_by_mouse_spout = fp_df.groupby([group_columns])["auc"].agg(["mean", "sem"]).reset_index()
+    
+
+    return auc_by_mouse_spout
