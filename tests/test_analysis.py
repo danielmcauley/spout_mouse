@@ -41,6 +41,24 @@ class TestAnalysisFunctions(unittest.TestCase):
             'spout_name': ['water', 'sucrose', 'water', 'sucrose', 'water', 'sucrose']
         })
 
+        # Sample data for calculate_auc_by_mouse_spout
+        self.fp_auc_data = pd.DataFrame({
+            'group': ['sgRosa26', 'sgRosa26', 'sgRosa26', 'sgRosa26', 'control', 'control']
+            'day': [1, 1, 2, 1, 1, 2],
+            'mouse_id': ['1228', '1228', '1274', '1274', '0037', '0039'],
+            'spout_name': ['water', 'water', 'sucrose', 'water', 'water', 'sucrose'],
+            'auc': [0.5, 0.7, 0.8, 0.6, 0.7, 0.9]
+        })
+
+        # Sample data for calculate_auc_by_mouse_spout
+        self.fp_auc_data = pd.DataFrame({
+            'group': ['A', 'A', 'A', 'B', 'B', 'B'],
+            'day': [1, 1, 2, 1, 1, 2],
+            'mouse_id': [1, 1, 1, 2, 2, 2],
+            'spout_name': ['left', 'left', 'left', 'right', 'right', 'right'],
+            'auc': [0.5, 0.7, 0.8, 0.6, 0.7, 0.9]
+        })
+
     def test_calculate_total_licks_per_trial(self):
         expected_output = pd.DataFrame({
             'mouse_id': ['1228', '1228', '1274', '1274'],
@@ -203,3 +221,29 @@ class TestAnalysisFunctions(unittest.TestCase):
         self.assertIn('time', mean_sem_zscores.columns)
         # Check that the DataFrame is not empty
         self.assertFalse(mean_sem_zscores.empty)
+
+    def test_calculate_auc_by_mouse_spout(self):
+        # Test case when across_days=False
+        result = analysis.calculate_auc_by_mouse_spout(self.fp_auc_data, across_days=False)
+        # Expected output for across_days=False
+        expected_output = pd.DataFrame({
+            'group': ['A', 'A', 'B', 'B'],
+            'day': [1, 2, 1, 2],
+            'mouse_id': [1, 1, 2, 2],
+            'spout_name': ['left', 'left', 'right', 'right'],
+            'mean': [0.6, 0.8, 0.65, 0.9],
+            'sem': [0.1, np.nan, 0.05, np.nan]
+        })
+        pd.testing.assert_frame_equal(result, expected_output, check_exact=False, check_less_precise=True)
+        # Test case when across_days=True
+        result_across_days = analysis.calculate_auc_by_mouse_spout(self.fp_auc_data, across_days=True)
+        # Expected output for across_days=True
+        expected_output_across_days = pd.DataFrame({
+            'group': ['A', 'B'],
+            'mouse_id': [1, 2],
+            'spout_name': ['left', 'right'],
+            'mean': [0.6666666667, 0.7333333333],
+            'sem': [0.0881928269, 0.0881928269]
+        })
+        pd.testing.assert_frame_equal(result_across_days, expected_output_across_days, check_exact=False, check_less_precise=True)
+        
