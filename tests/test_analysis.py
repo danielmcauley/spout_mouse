@@ -43,15 +43,6 @@ class TestAnalysisFunctions(unittest.TestCase):
 
         # Sample data for calculate_auc_by_mouse_spout
         self.fp_auc_data = pd.DataFrame({
-            'group': ['sgRosa26', 'sgRosa26', 'sgRosa26', 'sgRosa26', 'control', 'control']
-            'day': [1, 1, 2, 1, 1, 2],
-            'mouse_id': ['1228', '1228', '1274', '1274', '0037', '0039'],
-            'spout_name': ['water', 'water', 'sucrose', 'water', 'water', 'sucrose'],
-            'auc': [0.5, 0.7, 0.8, 0.6, 0.7, 0.9]
-        })
-
-        # Sample data for calculate_auc_by_mouse_spout
-        self.fp_auc_data = pd.DataFrame({
             'group': ['A', 'A', 'A', 'B', 'B', 'B'],
             'day': [1, 1, 2, 1, 1, 2],
             'mouse_id': [1, 1, 1, 2, 2, 2],
